@@ -19,6 +19,8 @@ USELESS_COMPUTATIONS
 Я набросал код этого теста под JMH: [src/main/java/org/sample/SimpleSpinLock.java](src/main/java/org/sample/SimpleSpinLock.java)
 
 Вопросы:
+
+
 1. Это вообще то, что нужно?
 2. Нужно ли было переносить USELESS_COMPUTATIONS?
 3. Нужно ли было переносить `readBarrier`?
@@ -29,9 +31,9 @@ USELESS_COMPUTATIONS
 Заметки
 ------
 
-StringMapLoops.java - тестирует производительность операций в среднем, где операции - это случайные добавления/удаления в мап. В чем ценность такого теста?
+[StringMapLoops.java](http://gee.cs.oswego.edu/cgi-bin/viewcvs.cgi/jsr166/src/test/loops/StringMapLoops.java?view=co) - тестирует производительность операций в среднем, где операции - это случайные добавления/удаления в мап. В чем ценность такого теста?
 
-UncheckedLockLoops.java - сравнение нескольких видов локов, выглядит интересно, надо переписать.
+[UncheckedLockLoops.java](http://gee.cs.oswego.edu/cgi-bin/viewcvs.cgi/jsr166/src/test/loops/UncheckedLockLoops.java?view=co) - сравнение нескольких видов локов, выглядит интересно, надо переписать.
 
 Вопросы
 ---
