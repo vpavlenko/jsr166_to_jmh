@@ -1,4 +1,4 @@
-[SimpleSpinLock](articles/SimpleSpinLock.md)
+[SimpleSpinLock](posts/SimpleSpinLock.md)
 
 SimpleSpinLock.java
 ---
