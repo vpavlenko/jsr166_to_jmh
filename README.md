@@ -1,3 +1,5 @@
+[SimpleSpinLock](articles/SimpleSpinLock.md)
+
 SimpleSpinLock.java
 ---
 
@@ -19,7 +21,6 @@ USELESS_COMPUTATIONS
 Я набросал код этого теста под JMH: [src/main/java/org/sample/SimpleSpinLock.java](src/main/java/org/sample/SimpleSpinLock.java)
 
 Вопросы:
-
 
 1. Это вообще то, что нужно?
 2. Нужно ли было переносить USELESS_COMPUTATIONS?

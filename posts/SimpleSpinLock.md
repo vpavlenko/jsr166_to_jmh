@@ -5,7 +5,7 @@ Problem statement
 -----
 
 Given the following microbenchmark:
-```
+```java
 @State(Scope.Benchmark)
 public class SimpleSpinLock {
 
@@ -41,7 +41,7 @@ Sample time measurements for the single thread
 
 Let's run it on my Mac.
 
-```
+```java
 final int NUM_THREADS = 1;
 final int LOCK_INSIDE_BACKOFF = 1;
 final int LOCK_OUTSIDE_BACKOFF = 1;
@@ -144,10 +144,68 @@ Benchmark                                                  Mode  Samples   Score
 o.s.SimpleSpinLock.measureSpinLockToggleUnderContention    avgt       30  20,908 ± 0,642  ns/op
 ```
 
-Ok, looks like the most interesting part is the final score, if only I see that in all forks I've reached "steady state" while doing warmup iterations. That's not the case for the fork 1 from above, but it seems to be true for the forks 2 and 3. So let's re-run it with `-wi 20`.
+Ok, looks like the most interesting part is the final score, if only I see that in all forks I've reached "steady state" while doing warmup iterations. That's not the case for the fork 1 from above, but it seems to be true for the forks 2 and 3. So let's re-run it with `-wi 20`:
+
+```
+Benchmark                                                  Mode  Samples   Score   Error  Units
+o.s.SimpleSpinLock.measureSpinLockToggleUnderContention    avgt       30  21,078 ± 0,259  ns/op
+```
+
+Then I tried to run it on my Linux VPS on DigitalOcean (with `-wi 10`) and was very disappointed, because:
+```
+Result: 557.724 ±(99.9%) 112.817 ns/op [Average]
+  Statistics: (min, avg, max) = (367.401, 557.724, 986.130), stdev = 168.859
+  Confidence interval (99.9%): [444.907, 670.541]
 
 
+# Run complete. Total time: 00:06:23
 
+Benchmark                                                  Mode  Samples    Score     Error  Units
+o.s.SimpleSpinLock.measureSpinLockToggleUnderContention    avgt       30  557.724 ± 112.817  ns/op
+```
+
+So it doesn't seem to be reasonable to run the perf tests on VPS. Alright, then I should set up my own true Linux somewhere else.
+
+Anyway, let's grab perfasm data from Linux machine. Hm, no, it doesn't work the same way as it doesn't work under Vagrant on my laptop:
+```
+$ java -jar target/benchmarks.jar -wi 10 -i 10 -f 1 -prof perfasm
+# VM invoker: /usr/lib/jvm/java-8-oracle/jre/bin/java
+# VM options: <none>
+# Warmup: 10 iterations, 1 s each
+# Measurement: 10 iterations, 1 s each
+# Timeout: 10 min per iteration
+# Threads: 100 threads, will synchronize iterations
+# Benchmark mode: Average time, time/op
+# Benchmark: org.sample.SimpleSpinLock.measureSpinLockToggleUnderContention
+
+# Run progress: 0.00% complete, ETA 00:00:20
+# Fork: 1 of 1
+# Preparing profilers: perfasm 
+# Profilers consume stdout and stderr from target VM, use -v EXTRA to copy to console
+<forked VM failed with exit code 255>
+<stdout last='20 lines'>
+</stdout>
+<stderr last='20 lines'>
+WARNING: Kernel address maps (/proc/{kallsyms,modules}) are restricted,
+check /proc/sys/kernel/kptr_restrict.
+
+Samples in kernel functions may not be resolved if a suitable vmlinux
+file is not found in the buildid cache or in the vmlinux path.
+
+Samples in kernel modules won't be resolved at all.
+
+If some relocation was applied (e.g. kexec) symbols may be misresolved
+even with a suitable vmlinux or kallsyms file.
+
+Error:
+The instructions event is not supported.
+/usr/lib/jvm/java-8-oracle/jre/bin/java: Terminated
+</stderr>
+
+# Run complete. Total time: 00:00:00
+
+Benchmark    Mode  Samples  Score   Error  Units
+```
 
 Single thread
 ---
