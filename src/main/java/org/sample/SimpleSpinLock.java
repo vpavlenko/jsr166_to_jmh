@@ -32,22 +32,29 @@
 package org.sample;
 
 import org.openjdk.jmh.annotations.*;
+import org.openjdk.jmh.infra.Blackhole;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-@State(Scope.Thread)
+@State(Scope.Benchmark)
 public class SimpleSpinLock {
+
+    final int NUM_THREADS = 1;
+    final int LOCK_INSIDE_BACKOFF = 1;
+    final int LOCK_OUTSIDE_BACKOFF = 1;
 
     AtomicInteger lock = new AtomicInteger(0);
 
     @Benchmark
     @BenchmarkMode(Mode.AverageTime)
     @OutputTimeUnit(TimeUnit.NANOSECONDS)
-    @GroupThreads(100)
+    @Threads(NUM_THREADS)
     public void measureSpinLockToggleUnderContention() {
         while (!lock.compareAndSet(0, 1));
+        Blackhole.consumeCPU(LOCK_INSIDE_BACKOFF);
         lock.set(0);
+        Blackhole.consumeCPU(LOCK_OUTSIDE_BACKOFF);
     }
 
 }

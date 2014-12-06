@@ -1,4 +1,4 @@
 #!/bin/bash
 
 mvn3 clean install
-java -jar target/benchmarks.jar -wi 5 -i 5 -f 1
+java -jar target/benchmarks.jar -wi 10 -i 10 -f 3
