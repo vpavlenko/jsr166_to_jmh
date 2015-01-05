@@ -34,7 +34,7 @@ That's my first benchmark to analyze. Firstly, I'd like to gather sample time me
 Hardware
 ---
 
-By default I do all the experiments on my Mac (). I also use Linux VPS, though I doubt it's a good idea.
+By default I do all the experiments on my Mac (Intel Core i5-4258U Haswell, Mac OS X 10.10 Yosemite, JRE 1.8.0_05-b13). I also use Linux VPS, though I doubt it's a good idea.
 
 Sample time measurements for the single thread
 ---
@@ -49,6 +49,7 @@ final int LOCK_OUTSIDE_BACKOFF = 1;
 
 I run it with the following command-line arguments:
 ```
+mvn clean install
 java -jar target/benchmarks.jar -wi 10 -i 10 -f 3
 ```
 
@@ -166,19 +167,22 @@ o.s.SimpleSpinLock.measureSpinLockToggleUnderContention    avgt       30  557.72
 
 So it doesn't seem to be reasonable to run the perf tests on VPS. Alright, then I should set up my own true Linux somewhere else.
 
-Anyway, let's grab perfasm data from Linux machine. Hm, no, it doesn't work the same way as it doesn't work under Vagrant on my laptop:
+Perfasm: failed to grab data
+--------
+
+I tried to grab perfasm data from Ubuntu 14.04 Trusty being run via VirtualBox:
 ```
-$ java -jar target/benchmarks.jar -wi 10 -i 10 -f 1 -prof perfasm
+$ java -jar target/benchmarks.jar -wi 5 -i 5 -f 1 -prof perfasm
 # VM invoker: /usr/lib/jvm/java-8-oracle/jre/bin/java
 # VM options: <none>
-# Warmup: 10 iterations, 1 s each
-# Measurement: 10 iterations, 1 s each
+# Warmup: 5 iterations, 1 s each
+# Measurement: 5 iterations, 1 s each
 # Timeout: 10 min per iteration
 # Threads: 100 threads, will synchronize iterations
 # Benchmark mode: Average time, time/op
 # Benchmark: org.sample.SimpleSpinLock.measureSpinLockToggleUnderContention
 
-# Run progress: 0.00% complete, ETA 00:00:20
+# Run progress: 0.00% complete, ETA 00:00:10
 # Fork: 1 of 1
 # Preparing profilers: perfasm 
 # Profilers consume stdout and stderr from target VM, use -v EXTRA to copy to console
@@ -186,17 +190,6 @@ $ java -jar target/benchmarks.jar -wi 10 -i 10 -f 1 -prof perfasm
 <stdout last='20 lines'>
 </stdout>
 <stderr last='20 lines'>
-WARNING: Kernel address maps (/proc/{kallsyms,modules}) are restricted,
-check /proc/sys/kernel/kptr_restrict.
-
-Samples in kernel functions may not be resolved if a suitable vmlinux
-file is not found in the buildid cache or in the vmlinux path.
-
-Samples in kernel modules won't be resolved at all.
-
-If some relocation was applied (e.g. kexec) symbols may be misresolved
-even with a suitable vmlinux or kallsyms file.
-
 Error:
 The instructions event is not supported.
 /usr/lib/jvm/java-8-oracle/jre/bin/java: Terminated
@@ -207,16 +200,68 @@ The instructions event is not supported.
 Benchmark    Mode  Samples  Score   Error  Units
 ```
 
-Single thread
+The reason why it doesn't work is that JMH wants to listen for "instructions" event, and perf under VM doesn't provide
+ it:
+```
+$ perf list
+
+List of pre-defined events (to be used in -e):
+  cpu-clock                                          [Software event]
+  task-clock                                         [Software event]
+  page-faults OR faults                              [Software event]
+  context-switches OR cs                             [Software event]
+  cpu-migrations OR migrations                       [Software event]
+  minor-faults                                       [Software event]
+  major-faults                                       [Software event]
+  alignment-faults                                   [Software event]
+  emulation-faults                                   [Software event]
+  dummy                                              [Software event]
+
+  rNNN                                               [Raw hardware event descriptor]
+  cpu/t1=v1[,t2=v2,t3 ...]/modifier                  [Raw hardware event descriptor]
+   (see 'man perf-list' on how to encode it)
+
+  mem:<addr>[:access]                                [Hardware breakpoint]
+
+  [ Tracepoints not available: Permission denied ]
+```
+
+
+The model for the single thread
 ---
 
 Being run on a single thread this benchmark should work as follows:
-- `lock.compareAndSet(0, 1)` sets the variable
+1. `lock.compareAndSet(0, 1)` sets the variable
+According to AtomicInteger implementation in jdk8, it calls native method `unsafe.compareAndSwapInt()`. Furthermore, 
+according to the jdk8 source, namely 
+http://hg.openjdk.java.net/jdk8/jdk8/hotspot/file/87ee5ee27509/src/share/vm/prims/unsafe.cpp#l1185
+http://hg.openjdk.java.net/jdk8/jdk8/hotspot/file/87ee5ee27509/src/share/vm/runtime/atomic.cpp#l67
+http://hg.openjdk.java.net/jdk8/jdk8/hotspot/file/87ee5ee27509/src/os_cpu/linux_x86/vm/atomic_linux_x86.inline.hpp#l93
+on Linux x86 `compareAndSwapInt()` is expressed by `cmpxchgl` (possibly with lock prefix). Lock prefix means exclusive
+access to memory. I think that even in a single mode this operation does real synchronization work in caches and 
+takes some fixed execution time.
 
+2. `Blackhole.consumeCPU()` consumes some time proportional to number of tokens passed. Let's have the same number of
+tokens passed in both `consumeCPU()` calls.
 
+3. `lock.set(0);` unconditionally sets the value, so it's just a `mov` which should result in assignment inside register
+file. This should take about 0.5ns, so we probably won't see statistically significant time required by this operation.
+
+So having NUM_TOKENS as a variable, we can suggest the linear model for execution time:
+```
+EXECUTION_TIME = CONSUME_TIME * NUM_TOKENS + CAS_TIME
+```
+
+To prove this hypothesis, we need to gather 10-20 points.
 
 
 Multiple threads agenda
 ---
 
-I also gather perfasm along with it. Then I give some naïve model of what time observations should we expect when we change the parameters. Then I plot graphs for the two simple cases and discuss the results. Then I try to correct the model and do more experiments.
+I also gather perfasm along with it. Then I give some naïve model of what time observations should we expect when we change the parameters.
+Then I plot graphs for the two simple cases and discuss the results. Then I try to correct the model and do more experiments.
+
+
+Notes
+---
+`/usr/lib/jvm` contains all installed VMs on Ubuntu.

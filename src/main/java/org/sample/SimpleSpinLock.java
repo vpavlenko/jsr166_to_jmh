@@ -33,28 +33,86 @@ package org.sample;
 
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
+import org.openjdk.jmh.results.RunResult;
+import org.openjdk.jmh.runner.Runner;
+import org.openjdk.jmh.runner.RunnerException;
+import org.openjdk.jmh.runner.options.Options;
+import org.openjdk.jmh.runner.options.OptionsBuilder;
+import org.openjdk.jmh.runner.options.VerboseMode;
 
+import java.io.PrintWriter;
+import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static java.util.Objects.requireNonNull;
+
+@BenchmarkMode(Mode.AverageTime)
+@OutputTimeUnit(TimeUnit.NANOSECONDS)
+@Warmup(iterations = 5, time = 100, timeUnit = TimeUnit.MILLISECONDS)
+@Measurement(iterations = 5, time = 100, timeUnit = TimeUnit.MILLISECONDS)
+@Fork(1)
 @State(Scope.Benchmark)
 public class SimpleSpinLock {
 
     final int NUM_THREADS = 1;
-    final int LOCK_INSIDE_BACKOFF = 1;
-    final int LOCK_OUTSIDE_BACKOFF = 1;
+
+    @Param({"0", "1", "2", "3", "4", "5"})
+    public int num_tokens;
+
+    static int j = 0;
 
     AtomicInteger lock = new AtomicInteger(0);
 
     @Benchmark
-    @BenchmarkMode(Mode.AverageTime)
-    @OutputTimeUnit(TimeUnit.NANOSECONDS)
     @Threads(NUM_THREADS)
     public void measureSpinLockToggleUnderContention() {
         while (!lock.compareAndSet(0, 1));
-        Blackhole.consumeCPU(LOCK_INSIDE_BACKOFF);
+//        if (j++ % 1000000 == 0) {
+//            System.out.println("num_tokens: " + num_tokens + " , j: " + j);
+//        }
+        Blackhole.consumeCPU(num_tokens);
         lock.set(0);
-        Blackhole.consumeCPU(LOCK_OUTSIDE_BACKOFF);
+        Blackhole.consumeCPU(num_tokens);
+    }
+
+    public static void main(String[] args) throws RunnerException, InterruptedException {
+        PrintWriter pw = new PrintWriter(System.out, true);
+
+        pw.println(System.getProperty("java.runtime.name") + ", " + System.getProperty("java.runtime.version"));
+        pw.println(System.getProperty("java.vm.name") + ", " + System.getProperty("java.vm.version"));
+        pw.println(System.getProperty("os.name") + ", " + System.getProperty("os.version") + ", " + System.getProperty("os.arch"));
+
+        runSingleBenchmark(pw);
+//        for (num_tokens = 10; num_tokens < 100; num_tokens += 10) {
+//            runSingleBenchmark(pw);
+//        }
+        pw.println();
+
+        pw.flush();
+        pw.close();
+    }
+
+    private static void runSingleBenchmark(PrintWriter pw) throws RunnerException {
+        pw.println();
+//        pw.println("Running with " + num_tokens + " tokens: ");
+
+        Options opts = new OptionsBuilder()
+                .verbosity(VerboseMode.SILENT)
+                .build();
+
+        Collection<RunResult> results = new Runner(opts).run();
+        for (RunResult r : results) {
+            String name = simpleName(r.getParams().getBenchmark());
+            double score = r.getPrimaryResult().getScore();
+            double scoreError = r.getPrimaryResult().getStatistics().getMeanErrorAt(0.99);
+            pw.printf("%30s: %11.3f ± %10.3f ns%n", name, score, scoreError);
+        }
+    }
+
+    private static String simpleName(String qName) {
+        int lastDot = requireNonNull(qName).lastIndexOf('.');
+        return lastDot < 0 ? qName : qName.substring(lastDot + 1);
     }
 
 }

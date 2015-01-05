@@ -5,14 +5,14 @@ SimpleSpinLock.java
 
 http://gee.cs.oswego.edu/cgi-bin/viewcvs.cgi/jsr166/src/test/loops/SimpleSpinLockLoops.java?view=co
 
-От 1 до 100 тредов одновременно стартуют и сражаются за CAS-lock в течение 2000000 итераций. На каждой итерации содержательно происходит
+От 1 до 100 тредов (1, 2, 3, 4, 6, 8, 12, 16, 24, 32, 48, 64, 96 тредов) одновременно стартуют и сражаются за CAS-lock в течение 2 000 000 итераций. На каждой итерации содержательно происходит
 ```
 while (!lock.compareAndSet(0, 1)) ;
-USELESS_COMPUTATIONS
+USELESS_COMPUTATIONS (0-3 арифметических действия)
 lock.set(0);
 if ((x += readBarrier) == 0)
     ++readBarrier;
-USELESS_COMPUTATIONS
+USELESS_COMPUTATIONS (0-1 арифметических действия)
 ```
 где `lock` - это `AtomicInteger`, а `readBarrier` - это `volatile int`.
 

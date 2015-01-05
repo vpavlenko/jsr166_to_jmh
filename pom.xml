@@ -115,6 +115,20 @@ THE POSSIBILITY OF SUCH DAMAGE.
                             </filters>
                         </configuration>
                     </execution>
+                    <!--<execution>-->
+                        <!--<phase>package</phase>-->
+                        <!--<goals>-->
+                            <!--<goal>shade</goal>-->
+                        <!--</goals>-->
+                        <!--<configuration>-->
+                            <!--<finalName>simple_spin_lock_bench</finalName>-->
+                            <!--<transformers>-->
+                                <!--<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">-->
+                                    <!--<mainClass>org.sample.SimpleSpinLock</mainClass>-->
+                                <!--</transformer>-->
+                            <!--</transformers>-->
+                        <!--</configuration>-->
+                    <!--</execution>-->
                 </executions>
             </plugin>
         </plugins>
