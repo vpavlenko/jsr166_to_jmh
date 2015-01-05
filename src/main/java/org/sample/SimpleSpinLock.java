@@ -49,18 +49,17 @@ import static java.util.Objects.requireNonNull;
 
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
-@Warmup(iterations = 5, time = 100, timeUnit = TimeUnit.MILLISECONDS)
-@Measurement(iterations = 5, time = 100, timeUnit = TimeUnit.MILLISECONDS)
-@Fork(1)
+@Warmup(iterations = 10, time = 100, timeUnit = TimeUnit.MILLISECONDS)
+@Measurement(iterations = 10, time = 100, timeUnit = TimeUnit.MILLISECONDS)
+@Fork(5)
 @State(Scope.Benchmark)
 public class SimpleSpinLock {
 
     final int NUM_THREADS = 1;
 
-    @Param({"0", "1", "2", "3", "4", "5"})
+    @Param({"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18",
+            "19", "20"})
     public int num_tokens;
-
-    static int j = 0;
 
     AtomicInteger lock = new AtomicInteger(0);
 
@@ -68,9 +67,6 @@ public class SimpleSpinLock {
     @Threads(NUM_THREADS)
     public void measureSpinLockToggleUnderContention() {
         while (!lock.compareAndSet(0, 1));
-//        if (j++ % 1000000 == 0) {
-//            System.out.println("num_tokens: " + num_tokens + " , j: " + j);
-//        }
         Blackhole.consumeCPU(num_tokens);
         lock.set(0);
         Blackhole.consumeCPU(num_tokens);
@@ -84,9 +80,6 @@ public class SimpleSpinLock {
         pw.println(System.getProperty("os.name") + ", " + System.getProperty("os.version") + ", " + System.getProperty("os.arch"));
 
         runSingleBenchmark(pw);
-//        for (num_tokens = 10; num_tokens < 100; num_tokens += 10) {
-//            runSingleBenchmark(pw);
-//        }
         pw.println();
 
         pw.flush();
@@ -94,9 +87,6 @@ public class SimpleSpinLock {
     }
 
     private static void runSingleBenchmark(PrintWriter pw) throws RunnerException {
-        pw.println();
-//        pw.println("Running with " + num_tokens + " tokens: ");
-
         Options opts = new OptionsBuilder()
                 .verbosity(VerboseMode.SILENT)
                 .build();

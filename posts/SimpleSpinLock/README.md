@@ -226,6 +226,8 @@ List of pre-defined events (to be used in -e):
   [ Tracepoints not available: Permission denied ]
 ```
 
+So I need to setup Linux out of VM (in progress).
+
 
 The model for the single thread
 ---
@@ -254,12 +256,73 @@ EXECUTION_TIME = CONSUME_TIME * NUM_TOKENS + CAS_TIME
 
 To prove this hypothesis, we need to gather 10-20 points.
 
+```java
+@BenchmarkMode(Mode.AverageTime)
+@OutputTimeUnit(TimeUnit.NANOSECONDS)
+@Warmup(iterations = 10, time = 100, timeUnit = TimeUnit.MILLISECONDS)
+@Measurement(iterations = 10, time = 100, timeUnit = TimeUnit.MILLISECONDS)
+@Fork(5)
+@State(Scope.Benchmark)
+public class SimpleSpinLock {
+
+    final int NUM_THREADS = 1;
+
+    @Param({"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18",
+            "19", "20"})
+    public int num_tokens;
+
+    AtomicInteger lock = new AtomicInteger(0);
+
+    @Benchmark
+    @Threads(NUM_THREADS)
+    public void measureSpinLockToggleUnderContention() {
+        while (!lock.compareAndSet(0, 1));
+        Blackhole.consumeCPU(num_tokens);
+        lock.set(0);
+        Blackhole.consumeCPU(num_tokens);
+    }
+
+}
+```
+
+```
+Benchmark                                                  (num_tokens)  Mode  Samples   Score   Error  Units
+o.s.SimpleSpinLock.measureSpinLockToggleUnderContention               0  avgt       50  23,542 ± 0,376  ns/op
+o.s.SimpleSpinLock.measureSpinLockToggleUnderContention               1  avgt       50  22,132 ± 0,434  ns/op
+o.s.SimpleSpinLock.measureSpinLockToggleUnderContention               2  avgt       50  23,122 ± 0,422  ns/op
+o.s.SimpleSpinLock.measureSpinLockToggleUnderContention               3  avgt       50  25,730 ± 0,901  ns/op
+o.s.SimpleSpinLock.measureSpinLockToggleUnderContention               4  avgt       50  26,876 ± 0,918  ns/op
+o.s.SimpleSpinLock.measureSpinLockToggleUnderContention               5  avgt       50  28,067 ± 0,444  ns/op
+o.s.SimpleSpinLock.measureSpinLockToggleUnderContention               6  avgt       50  32,185 ± 2,617  ns/op
+o.s.SimpleSpinLock.measureSpinLockToggleUnderContention               7  avgt       50  31,774 ± 0,508  ns/op
+o.s.SimpleSpinLock.measureSpinLockToggleUnderContention               8  avgt       50  34,143 ± 1,337  ns/op
+o.s.SimpleSpinLock.measureSpinLockToggleUnderContention               9  avgt       50  37,133 ± 0,581  ns/op
+o.s.SimpleSpinLock.measureSpinLockToggleUnderContention              10  avgt       50  41,024 ± 0,689  ns/op
+o.s.SimpleSpinLock.measureSpinLockToggleUnderContention              11  avgt       50  45,470 ± 0,980  ns/op
+o.s.SimpleSpinLock.measureSpinLockToggleUnderContention              12  avgt       50  49,104 ± 0,847  ns/op
+o.s.SimpleSpinLock.measureSpinLockToggleUnderContention              13  avgt       50  54,263 ± 0,824  ns/op
+o.s.SimpleSpinLock.measureSpinLockToggleUnderContention              14  avgt       50  59,305 ± 0,787  ns/op
+o.s.SimpleSpinLock.measureSpinLockToggleUnderContention              15  avgt       50  63,805 ± 0,804  ns/op
+o.s.SimpleSpinLock.measureSpinLockToggleUnderContention              16  avgt       50  68,509 ± 1,058  ns/op
+o.s.SimpleSpinLock.measureSpinLockToggleUnderContention              17  avgt       50  71,964 ± 1,058  ns/op
+o.s.SimpleSpinLock.measureSpinLockToggleUnderContention              18  avgt       50  76,533 ± 1,232  ns/op
+o.s.SimpleSpinLock.measureSpinLockToggleUnderContention              19  avgt       50  80,660 ± 1,011  ns/op
+o.s.SimpleSpinLock.measureSpinLockToggleUnderContention              20  avgt       50  86,846 ± 1,577  ns/op
+```
+
+Let's omit the error (I don't know how to do it well) and just fit this data with linear model:
+![Linear model fit](linear-regression-01.png)
+
+It doesn't seem to be quite linear, to be honest. Let's pick some more data with greater step for num_tokens:
+
+
 
 Multiple threads agenda
 ---
 
-I also gather perfasm along with it. Then I give some naïve model of what time observations should we expect when we change the parameters.
-Then I plot graphs for the two simple cases and discuss the results. Then I try to correct the model and do more experiments.
+I also gather perfasm along with it. Then I give some naïve model of what time observations should we expect when
+we change the parameters. Then I plot graphs for the two simple cases and discuss the results. Then I try to correct
+the model and do more experiments.
 
 
 Notes
