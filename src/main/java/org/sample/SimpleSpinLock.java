@@ -49,16 +49,15 @@ import static java.util.Objects.requireNonNull;
 
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
-@Warmup(iterations = 10, time = 100, timeUnit = TimeUnit.MILLISECONDS)
-@Measurement(iterations = 10, time = 100, timeUnit = TimeUnit.MILLISECONDS)
+@Warmup(iterations = 10, time = 200, timeUnit = TimeUnit.MILLISECONDS)
+@Measurement(iterations = 10, time = 200, timeUnit = TimeUnit.MILLISECONDS)
 @Fork(5)
 @State(Scope.Benchmark)
 public class SimpleSpinLock {
 
     final int NUM_THREADS = 1;
 
-    @Param({"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18",
-            "19", "20"})
+    @Param({"0", "10", "20", "30", "40", "50", "60", "70", "80", "90", "100"})
     public int num_tokens;
 
     AtomicInteger lock = new AtomicInteger(0);

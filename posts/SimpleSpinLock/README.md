@@ -310,11 +310,29 @@ o.s.SimpleSpinLock.measureSpinLockToggleUnderContention              19  avgt   
 o.s.SimpleSpinLock.measureSpinLockToggleUnderContention              20  avgt       50  86,846 ± 1,577  ns/op
 ```
 
-Let's omit the error (I don't know how to do it well) and just fit this data with linear model:
-![Linear model fit](linear-regression-01.png)
+Let's omit the error (I don't know how to take it into account properly) and just fit this data with linear model:
+![Linear model fit 01](linear-regression-01.png)
 
 It doesn't seem to be quite linear, to be honest. Let's pick some more data with greater step for num_tokens:
 
+```
+Benchmark                                                  (num_tokens)  Mode  Samples    Score    Error  Units
+o.s.SimpleSpinLock.measureSpinLockToggleUnderContention               0  avgt       50   25,100 ±  1,701  ns/op
+o.s.SimpleSpinLock.measureSpinLockToggleUnderContention              10  avgt       50   56,906 ± 38,272  ns/op
+o.s.SimpleSpinLock.measureSpinLockToggleUnderContention              20  avgt       50   82,890 ±  1,273  ns/op
+o.s.SimpleSpinLock.measureSpinLockToggleUnderContention              30  avgt       50  132,726 ±  2,015  ns/op
+o.s.SimpleSpinLock.measureSpinLockToggleUnderContention              40  avgt       50  191,025 ±  2,757  ns/op
+o.s.SimpleSpinLock.measureSpinLockToggleUnderContention              50  avgt       50  244,834 ±  3,432  ns/op
+o.s.SimpleSpinLock.measureSpinLockToggleUnderContention              60  avgt       50  297,461 ±  3,806  ns/op
+o.s.SimpleSpinLock.measureSpinLockToggleUnderContention              70  avgt       50  352,860 ±  6,721  ns/op
+o.s.SimpleSpinLock.measureSpinLockToggleUnderContention              80  avgt       50  397,340 ±  5,269  ns/op
+o.s.SimpleSpinLock.measureSpinLockToggleUnderContention              90  avgt       50  446,438 ±  5,023  ns/op
+o.s.SimpleSpinLock.measureSpinLockToggleUnderContention             100  avgt       50  511,868 ±  9,936  ns/op
+```
+
+![Linear model fit 02](linear-regression-02.png)
+
+Ok, it looks like we have a quite decent line now, so let's give up.
 
 
 Multiple threads agenda
