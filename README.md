@@ -1,4 +1,7 @@
-[SimpleSpinLock](posts/SimpleSpinLock.md)
+Work in progress
+---
+
+[SimpleSpinLock](posts/SimpleSpinLock/)
 
 SimpleSpinLock.java
 ---
