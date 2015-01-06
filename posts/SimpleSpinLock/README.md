@@ -167,10 +167,10 @@ o.s.SimpleSpinLock.measureSpinLockToggleUnderContention    avgt       30  557.72
 
 So it doesn't seem to be reasonable to run the perf tests on VPS. Alright, then I should set up my own true Linux somewhere else.
 
-Perfasm: failed to grab data
+Perfasm: check that there's no reordering
 --------
 
-I tried to grab perfasm data from Ubuntu 14.04 Trusty being run via VirtualBox:
+Firstly, I tried to grab perfasm data from Ubuntu 14.04 Trusty being run via VirtualBox, but I failed:
 ```
 $ java -jar target/benchmarks.jar -wi 5 -i 5 -f 1 -prof perfasm
 # VM invoker: /usr/lib/jvm/java-8-oracle/jre/bin/java
@@ -200,8 +200,8 @@ The instructions event is not supported.
 Benchmark    Mode  Samples  Score   Error  Units
 ```
 
-The reason why it doesn't work is that JMH wants to listen for "instructions" event, and perf under VM doesn't provide
- it:
+It doesn't work because JMH wants to listen for "instructions" event, and perf under VM doesn't provide
+ them:
 ```
 $ perf list
 
@@ -226,8 +226,103 @@ List of pre-defined events (to be used in -e):
   [ Tracepoints not available: Permission denied ]
 ```
 
-So I need to setup Linux out of VM (in progress).
+So I ran perfasm on real Linux instead. One pitfall (missing hsdis-amd64.so library) is cured by
+[this post](http://psy-lob-saw.blogspot.ru/2013/01/java-print-assembly.html). Here we go:
+```
+Hottest code regions (>10.00% "cycles" events):
+....[Hottest Region 1]..............................................................................
+ [0x7f8c111b2270:0x7f8c111b22e1] in org.sample.generated.SimpleSpinLock_measureSpinLockToggleUnderContention::measureSpinLockToggleUnderContention_avgt_jmhStub
 
+                    0x00007f8c111b2254: mov    (%rsp),%r8
+                    0x00007f8c111b2258: movzbl 0x94(%r8),%r11d    ;*getfield isDone
+                                                                  ; - org.sample.generated.SimpleSpinLock_measureSpinLockToggleUnderContention::measureSpinLockToggleUnderContention_avgt_jmhStub@24 (line 164)
+                                                                  ; implicit exception: dispatches to 0x00007f8c111b23c1
+                    0x00007f8c111b2260: mov    $0x1,%ebp
+                    0x00007f8c111b2265: test   %r11d,%r11d
+                    0x00007f8c111b2268: jne    0x00007f8c111b22ec  ;*ifeq
+                                                                  ; - org.sample.generated.SimpleSpinLock_measureSpinLockToggleUnderContention::measureSpinLockToggleUnderContention_avgt_jmhStub@27 (line 164)
+                    0x00007f8c111b226e: xchg   %ax,%ax            ;*aload_3
+                                                                  ; - org.sample.generated.SimpleSpinLock_measureSpinLockToggleUnderContention::measureSpinLockToggleUnderContention_avgt_jmhStub@13 (line 162)
+  0.48%             0x00007f8c111b2270: mov    0x10(%rsp),%r11
+                    0x00007f8c111b2275: mov    0x14(%r11),%r10d   ;*getfield lock
+                                                                  ; - org.sample.SimpleSpinLock::measureSpinLockToggleUnderContention@1 (line 68)
+                                                                  ; - org.sample.generated.SimpleSpinLock_measureSpinLockToggleUnderContention::measureSpinLockToggleUnderContention_avgt_jmhStub@14 (line 162)
+                    0x00007f8c111b2279: test   %r10d,%r10d
+                    0x00007f8c111b227c: je     0x00007f8c111b2316
+                    0x00007f8c111b2282: xor    %eax,%eax
+  0.46%             0x00007f8c111b2284: mov    $0x1,%ecx
+                    0x00007f8c111b2289: lock cmpxchg %ecx,0xc(%r10)
+ 12.36%   18.33%    0x00007f8c111b228f: sete   %r10b
+                    0x00007f8c111b2293: movzbl %r10b,%r10d        ;*invokevirtual compareAndSwapInt
+                                                                  ; - java.util.concurrent.atomic.AtomicInteger::compareAndSet@9 (line 133)
+                                                                  ; - org.sample.SimpleSpinLock::measureSpinLockToggleUnderContention@6 (line 68)
+                                                                  ; - org.sample.generated.SimpleSpinLock_measureSpinLockToggleUnderContention::measureSpinLockToggleUnderContention_avgt_jmhStub@14 (line 162)
+                    0x00007f8c111b2297: test   %r10d,%r10d
+                    0x00007f8c111b229a: je     0x00007f8c111b2335  ;*ifne
+                                                                  ; - org.sample.SimpleSpinLock::measureSpinLockToggleUnderContention@9 (line 68)
+                                                                  ; - org.sample.generated.SimpleSpinLock_measureSpinLockToggleUnderContention::measureSpinLockToggleUnderContention_avgt_jmhStub@14 (line 162)
+  0.61%             0x00007f8c111b22a0: mov    %r8,0x18(%rsp)
+                    0x00007f8c111b22a5: movslq 0x10(%r11),%rsi    ;*i2l  ; - org.sample.SimpleSpinLock::measureSpinLockToggleUnderContention@19 (line 69)
+                                                                  ; - org.sample.generated.SimpleSpinLock_measureSpinLockToggleUnderContention::measureSpinLockToggleUnderContention_avgt_jmhStub@14 (line 162)
+                    0x00007f8c111b22a9: xchg   %ax,%ax
+                    0x00007f8c111b22ab: callq  0x00007f8c11046160  ; OopMap{[8]=Oop [16]=Oop [24]=Oop off=272}
+                                                                  ;*invokestatic consumeCPU
+                                                                  ; - org.sample.SimpleSpinLock::measureSpinLockToggleUnderContention@20 (line 69)
+                                                                  ; - org.sample.generated.SimpleSpinLock_measureSpinLockToggleUnderContention::measureSpinLockToggleUnderContention_avgt_jmhStub@14 (line 162)
+                                                                  ;   {static_call}
+  0.56%             0x00007f8c111b22b0: mov    0x10(%rsp),%r10
+  0.03%             0x00007f8c111b22b5: mov    0x14(%r10),%r11d   ;*getfield lock
+                                                                  ; - org.sample.SimpleSpinLock::measureSpinLockToggleUnderContention@24 (line 70)
+                                                                  ; - org.sample.generated.SimpleSpinLock_measureSpinLockToggleUnderContention::measureSpinLockToggleUnderContention_avgt_jmhStub@14 (line 162)
+                    0x00007f8c111b22b9: test   %r11d,%r11d
+                    0x00007f8c111b22bc: je     0x00007f8c111b2325
+  0.61%             0x00007f8c111b22be: mov    %r12d,0xc(%r11)
+                    0x00007f8c111b22c2: lock addl $0x0,(%rsp)     ;*putfield value
+                                                                  ; - java.util.concurrent.atomic.AtomicInteger::set@2 (line 100)
+                                                                  ; - org.sample.SimpleSpinLock::measureSpinLockToggleUnderContention@28 (line 70)
+                                                                  ; - org.sample.generated.SimpleSpinLock_measureSpinLockToggleUnderContention::measureSpinLockToggleUnderContention_avgt_jmhStub@14 (line 162)
+ 11.93%   17.79%    0x00007f8c111b22c7: movslq 0x10(%r10),%rsi
+  0.03%             0x00007f8c111b22cb: callq  0x00007f8c11046160  ; OopMap{[8]=Oop [16]=Oop [24]=Oop off=304}
+                                                                  ;*invokestatic consumeCPU
+                                                                  ; - org.sample.SimpleSpinLock::measureSpinLockToggleUnderContention@36 (line 71)
+                                                                  ; - org.sample.generated.SimpleSpinLock_measureSpinLockToggleUnderContention::measureSpinLockToggleUnderContention_avgt_jmhStub@14 (line 162)
+                                                                  ;   {static_call}
+  0.53%             0x00007f8c111b22d0: mov    0x18(%rsp),%r8
+                    0x00007f8c111b22d5: movzbl 0x94(%r8),%r10d    ;*getfield isDone
+                                                                  ; - org.sample.generated.SimpleSpinLock_measureSpinLockToggleUnderContention::measureSpinLockToggleUnderContention_avgt_jmhStub@24 (line 164)
+                    0x00007f8c111b22dd: add    $0x1,%rbp          ; OopMap{r8=Oop [8]=Oop [16]=Oop off=321}
+                                                                  ;*ifeq
+                                                                  ; - org.sample.generated.SimpleSpinLock_measureSpinLockToggleUnderContention::measureSpinLockToggleUnderContention_avgt_jmhStub@27 (line 164)
+  0.43%             0x00007f8c111b22e1: test   %eax,0x1762ad19(%rip)        # 0x00007f8c287dd000
+                                                                  ;   {poll}
+                    0x00007f8c111b22e7: test   %r10d,%r10d
+                    0x00007f8c111b22ea: je     0x00007f8c111b2270  ;*aload_2
+                                                                  ; - org.sample.generated.SimpleSpinLock_measureSpinLockToggleUnderContention::measureSpinLockToggleUnderContention_avgt_jmhStub@30 (line 165)
+                    0x00007f8c111b22ec: mov    $0x7f8c27308080,%r10
+                    0x00007f8c111b22f6: callq  *%r10              ;*invokestatic nanoTime
+                                                                  ; - org.sample.generated.SimpleSpinLock_measureSpinLockToggleUnderContention::measureSpinLockToggleUnderContention_avgt_jmhStub@31 (line 165)
+                    0x00007f8c111b22f9: mov    0x8(%rsp),%r10
+....................................................................................................
+ 28.02%   36.12%  <total for region 1>
+```
+
+Good news: our four steps are not reordered by jdk-8:
+```
+...
+                    0x00007f8c111b2293: movzbl %r10b,%r10d        ;*invokevirtual compareAndSwapInt
+...
+                                                                  ;*invokestatic consumeCPU
+...
+  0.03%             0x00007f8c111b22b5: mov    0x14(%r10),%r11d   ;*getfield lock
+...
+                    0x00007f8c111b22c2: lock addl $0x0,(%rsp)     ;*putfield value
+...
+                                                                  ;*invokestatic consumeCPU
+...
+```
+
+The method `measureSpinLockToggleUnderContention_avgt_jmhStub()` comes from generated sources (see
+`target/generated-sources/`), and our method `measureSpinLockToggleUnderContention()` is inlined.
 
 The model for the single thread
 ---
