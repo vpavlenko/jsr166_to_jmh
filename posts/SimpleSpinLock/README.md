@@ -442,7 +442,7 @@ As I understand the "Nanotrusting the Nanotime" dogma on performance models, we 
 with variables "number of threads" and "number of tokens (backoff)". Then we should conclude, when the contention
 on a single lock starts and ends to be significant given multi-threading environment with real payload.
 
-
+![Multithreading chart](multithreading-chart.png)
 
 Todo
 ---

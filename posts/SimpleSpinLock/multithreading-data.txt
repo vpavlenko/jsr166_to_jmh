@@ -1,0 +1,107 @@
+       23.337      160.960      282.445      494.551       775.188     1110.753     1593.726      2174.748 
+       26.313      169.196      314.026      512.736       796.045     1119.883     1608.107      2272.029 
+       67.658      183.878      380.600      584.418       916.605     1336.153     1888.993      2616.894 
+      332.689      409.347      720.792     1095.324      1712.565     2552.108     3516.123      4793.175 
+     1354.532     1365.736     2280.401     3157.652      4853.976     7006.817     9457.487     14473.067 
+     5461.367     5147.938     8424.589    11693.347     17420.317    25417.294    35333.600     51904.949 
+    21742.652    20305.311    32996.668    45011.010     67776.738   103259.912   147292.129    187618.044 
+    81904.516    80446.631   131049.168   184882.220    268944.967   385165.585   523030.197    680528.836 
+   329287.777   321296.857   522332.794   707683.471   1078361.902  1546761.875  2126827.351   2774096.648 
+  1317038.311  1284499.377  2124524.566  2842417.040   4274221.937  6079492.805  8416042.231  11039750.859 
+
+
+Run benchmark with 1 threads
+measureSpinLockToggleUnderContention: threads:  1    tokens:      0         23.337 ±      0.174 ns
+measureSpinLockToggleUnderContention: threads:  1    tokens:      4         26.313 ±      0.261 ns
+measureSpinLockToggleUnderContention: threads:  1    tokens:     16         67.658 ±      0.731 ns
+measureSpinLockToggleUnderContention: threads:  1    tokens:     64        332.689 ±      2.736 ns
+measureSpinLockToggleUnderContention: threads:  1    tokens:    256       1354.532 ±     12.873 ns
+measureSpinLockToggleUnderContention: threads:  1    tokens:   1024       5461.367 ±     52.221 ns
+measureSpinLockToggleUnderContention: threads:  1    tokens:   4096      21742.652 ±    178.473 ns
+measureSpinLockToggleUnderContention: threads:  1    tokens:  16384      81904.516 ±    455.691 ns
+measureSpinLockToggleUnderContention: threads:  1    tokens:  65536     329287.777 ±   2570.112 ns
+measureSpinLockToggleUnderContention: threads:  1    tokens: 262144    1317038.311 ±   9882.437 ns
+
+Run benchmark with 2 threads
+measureSpinLockToggleUnderContention: threads:  2    tokens:      0        160.960 ±      8.124 ns
+measureSpinLockToggleUnderContention: threads:  2    tokens:      4        169.196 ±      1.989 ns
+measureSpinLockToggleUnderContention: threads:  2    tokens:     16        183.878 ±      1.972 ns
+measureSpinLockToggleUnderContention: threads:  2    tokens:     64        409.347 ±      3.973 ns
+measureSpinLockToggleUnderContention: threads:  2    tokens:    256       1365.736 ±      1.968 ns
+measureSpinLockToggleUnderContention: threads:  2    tokens:   1024       5147.938 ±      8.354 ns
+measureSpinLockToggleUnderContention: threads:  2    tokens:   4096      20305.311 ±     37.411 ns
+measureSpinLockToggleUnderContention: threads:  2    tokens:  16384      80446.631 ±    169.387 ns
+measureSpinLockToggleUnderContention: threads:  2    tokens:  65536     321296.857 ±    283.315 ns
+measureSpinLockToggleUnderContention: threads:  2    tokens: 262144    1284499.377 ±   1049.695 ns
+
+Run benchmark with 3 threads
+measureSpinLockToggleUnderContention: threads:  3    tokens:      0        282.445 ±      4.933 ns
+measureSpinLockToggleUnderContention: threads:  3    tokens:      4        314.026 ±      3.348 ns
+measureSpinLockToggleUnderContention: threads:  3    tokens:     16        380.600 ±      4.744 ns
+measureSpinLockToggleUnderContention: threads:  3    tokens:     64        720.792 ±      7.707 ns
+measureSpinLockToggleUnderContention: threads:  3    tokens:    256       2280.401 ±     18.016 ns
+measureSpinLockToggleUnderContention: threads:  3    tokens:   1024       8424.589 ±     76.731 ns
+measureSpinLockToggleUnderContention: threads:  3    tokens:   4096      32996.668 ±    352.887 ns
+measureSpinLockToggleUnderContention: threads:  3    tokens:  16384     131049.168 ±    600.038 ns
+measureSpinLockToggleUnderContention: threads:  3    tokens:  65536     522332.794 ±   2661.817 ns
+measureSpinLockToggleUnderContention: threads:  3    tokens: 262144    2124524.566 ±  29246.320 ns
+
+Run benchmark with 4 threads
+measureSpinLockToggleUnderContention: threads:  4    tokens:      0        494.551 ±      9.444 ns
+measureSpinLockToggleUnderContention: threads:  4    tokens:      4        512.736 ±      7.746 ns
+measureSpinLockToggleUnderContention: threads:  4    tokens:     16        584.418 ±     10.156 ns
+measureSpinLockToggleUnderContention: threads:  4    tokens:     64       1095.324 ±     17.543 ns
+measureSpinLockToggleUnderContention: threads:  4    tokens:    256       3157.652 ±     37.646 ns
+measureSpinLockToggleUnderContention: threads:  4    tokens:   1024      11693.347 ±    333.441 ns
+measureSpinLockToggleUnderContention: threads:  4    tokens:   4096      45011.010 ±    680.465 ns
+measureSpinLockToggleUnderContention: threads:  4    tokens:  16384     184882.220 ±   9645.166 ns
+measureSpinLockToggleUnderContention: threads:  4    tokens:  65536     707683.471 ±   4756.782 ns
+measureSpinLockToggleUnderContention: threads:  4    tokens: 262144    2842417.040 ±  28129.417 ns
+
+Run benchmark with 5 threads
+measureSpinLockToggleUnderContention: threads:  5    tokens:      0        775.188 ±     26.433 ns
+measureSpinLockToggleUnderContention: threads:  5    tokens:      4        796.045 ±     33.842 ns
+measureSpinLockToggleUnderContention: threads:  5    tokens:     16        916.605 ±     32.148 ns
+measureSpinLockToggleUnderContention: threads:  5    tokens:     64       1712.565 ±     64.476 ns
+measureSpinLockToggleUnderContention: threads:  5    tokens:    256       4853.976 ±    210.843 ns
+measureSpinLockToggleUnderContention: threads:  5    tokens:   1024      17420.317 ±    542.574 ns
+measureSpinLockToggleUnderContention: threads:  5    tokens:   4096      67776.738 ±   2319.299 ns
+measureSpinLockToggleUnderContention: threads:  5    tokens:  16384     268944.967 ±   5692.869 ns
+measureSpinLockToggleUnderContention: threads:  5    tokens:  65536    1078361.902 ±  25275.500 ns
+measureSpinLockToggleUnderContention: threads:  5    tokens: 262144    4274221.937 ±  91053.570 ns
+
+Run benchmark with 6 threads
+measureSpinLockToggleUnderContention: threads:  6    tokens:      0       1110.753 ±     48.500 ns
+measureSpinLockToggleUnderContention: threads:  6    tokens:      4       1119.883 ±     51.572 ns
+measureSpinLockToggleUnderContention: threads:  6    tokens:     16       1336.153 ±     77.952 ns
+measureSpinLockToggleUnderContention: threads:  6    tokens:     64       2552.108 ±    154.025 ns
+measureSpinLockToggleUnderContention: threads:  6    tokens:    256       7006.817 ±    363.769 ns
+measureSpinLockToggleUnderContention: threads:  6    tokens:   1024      25417.294 ±   1339.889 ns
+measureSpinLockToggleUnderContention: threads:  6    tokens:   4096     103259.912 ±   6054.409 ns
+measureSpinLockToggleUnderContention: threads:  6    tokens:  16384     385165.585 ±  10652.407 ns
+measureSpinLockToggleUnderContention: threads:  6    tokens:  65536    1546761.875 ±  32638.408 ns
+measureSpinLockToggleUnderContention: threads:  6    tokens: 262144    6079492.805 ±  93437.252 ns
+
+Run benchmark with 7 threads
+measureSpinLockToggleUnderContention: threads:  7    tokens:      0       1593.726 ±    103.401 ns
+measureSpinLockToggleUnderContention: threads:  7    tokens:      4       1608.107 ±    117.234 ns
+measureSpinLockToggleUnderContention: threads:  7    tokens:     16       1888.993 ±    195.401 ns
+measureSpinLockToggleUnderContention: threads:  7    tokens:     64       3516.123 ±    247.351 ns
+measureSpinLockToggleUnderContention: threads:  7    tokens:    256       9457.487 ±    533.685 ns
+measureSpinLockToggleUnderContention: threads:  7    tokens:   1024      35333.600 ±   1861.306 ns
+measureSpinLockToggleUnderContention: threads:  7    tokens:   4096     147292.129 ±  15935.274 ns
+measureSpinLockToggleUnderContention: threads:  7    tokens:  16384     523030.197 ±  20332.468 ns
+measureSpinLockToggleUnderContention: threads:  7    tokens:  65536    2126827.351 ±  60371.906 ns
+measureSpinLockToggleUnderContention: threads:  7    tokens: 262144    8416042.231 ± 317989.700 ns
+
+Run benchmark with 8 threads
+measureSpinLockToggleUnderContention: threads:  8    tokens:      0       2174.748 ±    246.918 ns
+measureSpinLockToggleUnderContention: threads:  8    tokens:      4       2272.029 ±    194.080 ns
+measureSpinLockToggleUnderContention: threads:  8    tokens:     16       2616.894 ±    199.469 ns
+measureSpinLockToggleUnderContention: threads:  8    tokens:     64       4793.175 ±    373.864 ns
+measureSpinLockToggleUnderContention: threads:  8    tokens:    256      14473.067 ±   1433.775 ns
+measureSpinLockToggleUnderContention: threads:  8    tokens:   1024      51904.949 ±  16014.130 ns
+measureSpinLockToggleUnderContention: threads:  8    tokens:   4096     187618.044 ±  16089.905 ns
+measureSpinLockToggleUnderContention: threads:  8    tokens:  16384     680528.836 ±  17242.017 ns
+measureSpinLockToggleUnderContention: threads:  8    tokens:  65536    2774096.648 ±  77083.614 ns
+measureSpinLockToggleUnderContention: threads:  8    tokens: 262144   11039750.859 ± 319472.801 ns
