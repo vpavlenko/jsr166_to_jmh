@@ -29,17 +29,18 @@ public class SimpleSpinLock {
 }
 ```
 
-That's my first benchmark to analyze. Firstly, I'd like to gather sample time measurements for the trivial case: with only one thread being run. There still should be CAS instruction being emitted and run on HW, so I expect to measure the cost of some cache flush on my HW.
+That's my first benchmark to analyze. Firstly, I gather sample time measurements
+ for the trivial case: with only one thread being run. There still should be CAS
+ instruction being emitted and run on HW, so I expect to measure the cost of some cache flush on my HW. Then
+ I show data for multi-threading case.
 
-Hardware
----
-
-By default I do all the experiments on my Mac (Intel Core i5-4258U Haswell, Mac OS X 10.10 Yosemite, JRE 1.8.0_05-b13). I also use Linux VPS, though I doubt it's a good idea.
 
 Sample time measurements for the single thread
 ---
 
-Let's run it on my Mac.
+By default I do all the experiments on my Mac (Intel Core i5-4258U Haswell, Mac OS X 10.10 Yosemite, JRE 1.8.0_05-b13).
+
+Let's run the benchmark on my Mac with the simplest constants:
 
 ```java
 final int NUM_THREADS = 1;
@@ -145,14 +146,19 @@ Benchmark                                                  Mode  Samples   Score
 o.s.SimpleSpinLock.measureSpinLockToggleUnderContention    avgt       30  20,908 ± 0,642  ns/op
 ```
 
-Ok, looks like the most interesting part is the final score, if only I see that in all forks I've reached "steady state" while doing warmup iterations. That's not the case for the fork 1 from above, but it seems to be true for the forks 2 and 3. So let's re-run it with `-wi 20`:
+Ok, looks like the most interesting part is the final score, if only I see that in all forks
+I've reached "steady state" while doing warmup iterations. That's not the case for the fork 1 from above,
+but it seems to be true for the forks 2 and 3. So let's re-run it with `-wi 20`:
 
 ```
 Benchmark                                                  Mode  Samples   Score   Error  Units
 o.s.SimpleSpinLock.measureSpinLockToggleUnderContention    avgt       30  21,078 ± 0,259  ns/op
 ```
 
-Then I tried to run it on my Linux VPS on DigitalOcean (with `-wi 10`) and was very disappointed, because:
+So, 21 ns is the time of cache synchronization on my Haswell.
+
+Then I tried to run it on my Linux VPS on DigitalOcean (with `-wi 10`) and was very disappointed, because error was
+large:
 ```
 Result: 557.724 ±(99.9%) 112.817 ns/op [Average]
   Statistics: (min, avg, max) = (367.401, 557.724, 986.130), stdev = 168.859
@@ -165,7 +171,7 @@ Benchmark                                                  Mode  Samples    Scor
 o.s.SimpleSpinLock.measureSpinLockToggleUnderContention    avgt       30  557.724 ± 112.817  ns/op
 ```
 
-So it doesn't seem to be reasonable to run the perf tests on VPS. Alright, then I should set up my own true Linux somewhere else.
+So it doesn't seem to be reasonable to run the perf tests on VPS.
 
 Perfasm: check that there's no reordering
 --------
@@ -226,7 +232,8 @@ List of pre-defined events (to be used in -e):
   [ Tracepoints not available: Permission denied ]
 ```
 
-So I ran perfasm on real Linux instead. One pitfall (missing hsdis-amd64.so library) is cured by
+So I ran perfasm on real Linux instead. If you try to do that, your first problem (missing hsdis-amd64.so library)
+is cured by
 [this post](http://psy-lob-saw.blogspot.ru/2013/01/java-print-assembly.html). Here we go:
 ```
 Hottest code regions (>10.00% "cycles" events):
@@ -440,32 +447,16 @@ Multiple threads
 
 As I understand the "Nanotrusting the Nanotime" dogma on performance models, we should gather 2d-table of perf data
 with variables "number of threads" and "number of tokens (backoff)". Then we should conclude, when the contention
-on a single lock starts and ends to be significant given multi-threading environment with real payload.
+on a single lock ends to be significant given multi-threading environment with real payload.
 
 ![Multithreading chart](multithreading-chart.png)
 
 What can we take out from this graph?
 
 - Positive slope of all lines starting from threads=2 shows that my Mac has two real cores.
+
 - Starting from 4^4 = 256 backoff tokens (1300 ns per iteration), lock operations (=cache synchronization) don't
 influence average time of a single iteration.
 
-So if `lock.compareAndSet()` is performed every 1 us, it doesn't become system's bottleneck.
-
-Todo
----
-
-1. Find better way to draw graphs.
-
-2. Find a way to make linear regression on confidence intervals.
-
-Questions
----
-
-From [Nanotrusting the nanotime](http://shipilev.net/blog/2014/nanotrusting-nanotime/#_one_off_measurements):
-```
-Java(TM) SE Runtime Environment, 1.7.0_45-b18
-Java HotSpot(TM) 64-Bit Server VM, 24.45-b08
-Linux, 3.13.8-1-ARCH, amd64
-```
-Why don't you publish the name of CPU's microarchitecture?
+So if `lock.compareAndSet()` is performed every 1 us, it doesn't become system's bottleneck no matter how many threads
+there are.
