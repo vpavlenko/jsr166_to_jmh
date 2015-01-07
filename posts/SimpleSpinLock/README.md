@@ -321,28 +321,32 @@ Good news: our four steps are not reordered by jdk-8:
 ...
 ```
 
-The method `measureSpinLockToggleUnderContention_avgt_jmhStub()` comes from generated sources (see
-`target/generated-sources/`), and our method `measureSpinLockToggleUnderContention()` is inlined.
+Don't be confused that we see listing for some strange method:
+`measureSpinLockToggleUnderContention_avgt_jmhStub()` comes from generated sources (see the directory
+`target/generated-sources/`), and our method `measureSpinLockToggleUnderContention()` is inlined there.
 
 The model for the single thread
 ---
 
 Being run on a single thread this benchmark should work as follows:
-1. `lock.compareAndSet(0, 1)` sets the variable
-According to AtomicInteger implementation in jdk8, it calls native method `unsafe.compareAndSwapInt()`. Furthermore, 
+
+1. `lock.compareAndSet(0, 1)` sets the variable.
+
+ According to AtomicInteger implementation in jdk8, it calls native method `unsafe.compareAndSwapInt()`. Furthermore,
 according to the jdk8 source, namely 
 http://hg.openjdk.java.net/jdk8/jdk8/hotspot/file/87ee5ee27509/src/share/vm/prims/unsafe.cpp#l1185
 http://hg.openjdk.java.net/jdk8/jdk8/hotspot/file/87ee5ee27509/src/share/vm/runtime/atomic.cpp#l67
 http://hg.openjdk.java.net/jdk8/jdk8/hotspot/file/87ee5ee27509/src/os_cpu/linux_x86/vm/atomic_linux_x86.inline.hpp#l93
-on Linux x86 `compareAndSwapInt()` is expressed by `cmpxchgl` (possibly with lock prefix). Lock prefix means exclusive
-access to memory. I think that even in a single mode this operation does real synchronization work in caches and 
-takes some fixed execution time.
+on Linux x86 `compareAndSwapInt()` is expressed by `lock cmpxchgl` (as we can also see on assembler listing).
+Lock prefix means exclusive access to memory. I think that even in a single mode this operation does real
+synchronization work for core caches and takes some fixed execution time.
 
-2. `Blackhole.consumeCPU()` consumes some time proportional to number of tokens passed. Let's have the same number of
-tokens passed in both `consumeCPU()` calls.
+2. `Blackhole.consumeCPU()` consumes some time proportional to number of tokens passed.
 
 3. `lock.set(0);` unconditionally sets the value, so it's just a `mov` which should result in assignment inside register
 file. This should take about 0.5ns, so we probably won't see statistically significant time required by this operation.
+
+4. Yet another `Blackhole.consumeCPU()`.  Let's have the same number of tokens passed in both `consumeCPU()` calls.
 
 So having NUM_TOKENS as a variable, we can suggest the linear model for execution time:
 ```
@@ -427,17 +431,39 @@ o.s.SimpleSpinLock.measureSpinLockToggleUnderContention             100  avgt   
 
 ![Linear model fit 02](linear-regression-02.png)
 
-Ok, it looks like we have a quite decent line now, so let's give up.
+As the comment in Blackhole.java says, we can expect non-linearity on low token values because of hardware
+optimizations, so the data is OK.
 
 
-Multiple threads agenda
+Multiple threads
 ---
 
-I also gather perfasm along with it. Then I give some naïve model of what time observations should we expect when
-we change the parameters. Then I plot graphs for the two simple cases and discuss the results. Then I try to correct
-the model and do more experiments.
+As I understand the "Nanotrusting the Nanotime" dogma on performance models, we should gather 2d-table of perf data
+with variables "number of threads" and "number of tokens (backoff)". Then we should conclude, when the contention
+on a single lock starts and ends to be significant given multi-threading environment with real payload.
 
 
-Notes
+
+Todo
 ---
-`/usr/lib/jvm` contains all installed VMs on Ubuntu.
+
+1. Get constants from linear regression. Analyze them.
+
+2. Find better way to draw graphs.
+
+3. Find a way to make linear regression on confidence intervals.
+
+4. Write down thoughts about the graph form.
+
+5. Make graphs for backoff (Calc?).
+
+Questions
+---
+
+From [Nanotrusting the nanotime](http://shipilev.net/blog/2014/nanotrusting-nanotime/#_one_off_measurements):
+```
+Java(TM) SE Runtime Environment, 1.7.0_45-b18
+Java HotSpot(TM) 64-Bit Server VM, 24.45-b08
+Linux, 3.13.8-1-ARCH, amd64
+```
+Why don't you publish the name of CPU's microarchitecture?
