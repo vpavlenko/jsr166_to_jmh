@@ -444,18 +444,20 @@ on a single lock starts and ends to be significant given multi-threading environ
 
 ![Multithreading chart](multithreading-chart.png)
 
+What can we take out from this graph?
+
+- Positive slope of all lines starting from threads=2 shows that my Mac has two real cores.
+- Starting from 4^4 = 256 backoff tokens (1300 ns per iteration), lock operations (=cache synchronization) don't
+influence average time of a single iteration.
+
+So if `lock.compareAndSet()` is performed every 1 us, it doesn't become system's bottleneck.
+
 Todo
 ---
 
-1. Get constants from linear regression. Analyze them.
+1. Find better way to draw graphs.
 
-2. Find better way to draw graphs.
-
-3. Find a way to make linear regression on confidence intervals.
-
-4. Write down thoughts about the graph form.
-
-5. Make graphs for backoff (Calc?).
+2. Find a way to make linear regression on confidence intervals.
 
 Questions
 ---
